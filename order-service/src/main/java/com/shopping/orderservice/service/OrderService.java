@@ -30,7 +30,7 @@ public class OrderService {
         orderLineItems.setQuantity(orderLineItemsDto.getQuantity());
         return orderLineItems;
     }
-    public void placeOrder(OrderRequest orderRequest){
+    public String placeOrder(OrderRequest orderRequest){
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
         order.setOrderLineItemsList(orderRequest.getOrderLineItemsDtoList()
@@ -49,8 +49,10 @@ public class OrderService {
                                                 .block();
         boolean allMatches = Arrays.stream(inventoryResponses)
                         .allMatch(inventoryResponse -> inventoryResponse.getIsInStock());
-        if(allMatches)
+        if(allMatches){
             orderRepository.save(order);
+            return  "Order placed successfully";
+        }
         else
             throw new IllegalArgumentException("Stock is not available, please try later");
     }
