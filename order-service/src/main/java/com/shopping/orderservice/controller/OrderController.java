@@ -4,6 +4,8 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.netty.util.concurrent.CompleteFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +25,8 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    private Logger logger = LoggerFactory.getLogger(OrderController.class);
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @CircuitBreaker(name = "inventory" , fallbackMethod = "fallbackMethod")
@@ -32,7 +36,8 @@ public class OrderController {
         return CompletableFuture.supplyAsync(()->orderService.placeOrder(orderRequest));
     }
     public CompletableFuture<String> fallbackMethod(OrderRequest orderRequest, RuntimeException runtimeException){
-        return CompletableFuture.supplyAsync(()-> "Oops something went wrong, please order after some time");
+        logger.info(runtimeException.toString());
+        return CompletableFuture.supplyAsync(()-> "Oops something went wrong, please order after some time" + runtimeException.toString());
     }
     
 }

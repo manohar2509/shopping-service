@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.shopping.orderservice.dto.InventoryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.shopping.orderservice.dto.OrderLineItemsDto;
@@ -22,6 +23,9 @@ public class OrderService {
     private OrderRepository orderRepository;
     @Autowired
     private WebClient.Builder webClientBuilder;
+
+    @Autowired
+    private KafkaProducer kafkaProducer;
     public OrderLineItems mapToDto(OrderLineItemsDto orderLineItemsDto){
         OrderLineItems orderLineItems = new OrderLineItems();
         orderLineItems.setId(orderLineItemsDto.getId());
@@ -51,6 +55,7 @@ public class OrderService {
                         .allMatch(inventoryResponse -> inventoryResponse.getIsInStock());
         if(allMatches){
             orderRepository.save(order);
+            kafkaProducer.sendMessage("notificationTopic",order.getOrderNumber());
             return  "Order placed successfully";
         }
         else
